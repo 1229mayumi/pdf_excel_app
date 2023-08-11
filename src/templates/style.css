@@ -1,0 +1,14 @@
+h1 {
+    margin-top: 0; /* 余白を0に設定 */
+    color:blue;
+}
+.button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.my-button {
+    margin: 5px;  /* ボタン間の隙間調整 */
+    width: 150px;  /* ボタンの幅 */
+    height: 25px;  /* ボタンの高さ */
+    font-size: 15px;  /* フォントサイズ調整 */

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>PDFエクセル変換お助けアプリ</title>
+    <meta name="description" content="PDFからエクセルデータに変換します">
+    <link rel="stylesheet"  href="/templates/style.css">
+</head>
+
+<body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 180vh;">
+
+    <!-- PDF.jsのコアライブラリを読み込み -->
+    <script src="https://npmcdn.com/pdfjs-dist/build/pdf.js"></script>
+    <!-- PDF.jsのバックグラウンドで動作するワーカースクリプトを読み込み -->
+    <script src="https://npmcdn.com/pdfjs-dist/build/pdf.worker.js"></script>
+
+
+    <div class="main">
+        <h1>PDFエクセル変換お助けアプリ</h1>
+        <h2>PDFデータを読み込んでエクセルデータに変換します。</h2>
+    </div>
+    
+   
+    </style>
+
+    <div id="drop-area">
+        ドラッグ＆ドロップでPDFファイルをここにドロップしてください。
+        <style>
+            #drop-area{
+                width: 650px;
+                height: 50px;
+                border: 2px dashed #ccc;
+                border-radius: 8px;
+                padding: 15px;
+                text-align: center;
+                font-family: Arial, sans-serif;
+                font-size: 20px;
+                color: #555;
+            }
+        </style>
+    </div>
+
+    <h1>PDF Viewer</h1>
+    
+    <!-- ocr機能を分けるボタンを設置 -->
+    <div class="button-container"> 
+        <button id="ocr1-button" class="my-button">OCR1</button>
+        <button id="ocr2-button" class="my-button">OCR2</button>
+        <button id="ocr3-button" class="my-button">OCR3</button>
+        <button id="ocr4-button" class="my-button">OCR4</button>
+    </div>
+
+    <p>ここにPDFを表示します:</p>
+
+    <iframe id="pdfFrame" width="1100" height="1000"></iframe>
+   
+    <script>
+        var dropArea = document.getElementById('drop-area');
+        var iframe = document.getElementById("pdfFrame");
+        var file; // ファイルを保持するためのグローバル変数
+
+        // dropArea上でのドラッグ＆ドロップ操作の実行のための準備
+        dropArea.addEventListener('dragenter', handleDragEnter, false);
+        dropArea.addEventListener('dragover', handleDragOver, false);
+        dropArea.addEventListener('dragleave', handleDragLeave, false);
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        // 'dragenter'イベントハンドラ：dropAreaにドラッグした際、背景色が灰色に変わる
+        function handleDragEnter(e) {
+            // dropAreaにドラッグした際に、デフォルトのブラウザ動作を抑制
+            e.preventDefault();
+            dropArea.style.background = '#e1e7f0';
+        }
+        // 'dragover'イベントハンドラ：dropAreaにドラッグした際に、デフォルトのブラウザ動作を抑制
+        function handleDragOver(e) {
+            e.preventDefault(); 
+        }
+
+        // 'dragleave'イベントハンドラ：dropAreaからドラッグが外れた際、背景色が白色に変わる
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropArea.style.background = '#fff';
+        }
+
+        // 'drop'イベントハンドラ：dropAreaにドロップした際に、背景色が元(白色)に戻る
+        function handleDrop(e) {
+            e.preventDefault();
+            dropArea.style.background = '#fff';
+
+            // ドラッグ＆ドロップされたファイルの情報を取得して、filesという変数に代入
+            var files = e.dataTransfer.files;
+            // ファイルが１つ以上あるかをチェック
+            if (files.length > 0) {
+                // filesオブジェクトから最初のファイルを取得して'file'という変数に保存
+                file = files[0]; //ファイルはグローバル変数で、他の関数でもアクセス可能
+                // 取得したファイルがPDFファイルかどうかをチェック
+                if (file.type === 'application/pdf') {
+                    // FileReaderオブジェクトを作成
+                    var reader = new FileReader();
+                    // 'FileReader'を使用して読み込んだPDFファイルの内容を取得し、'iframe'要素に表示するための処理
+                    reader.onload = function(event) {
+                        var pdfData = new Uint8Array(event.target.result);
+                        // 'Blob'オブジェクトからURLを生成
+                        var pdfUrl = URL.createObjectURL(new Blob([pdfData], { type: 'application/pdf' }));
+                        // 'pdfUrl'に格納されたPDFファイルのURLを<iframe>に設定して、<iflame>内に表示
+                        iframe.src = pdfUrl;
+                    };
+                    // 指定されたPDFファイル（file）を非同期で読み込む（大きなデータも扱えるようになる）
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    alert('選択したファイルはPDFではありません。別のファイルを選択してください。');
+                }
+            }
+        }
+    </script>
+    
+<!-- OCR結果をダウンロードするためのリンクを追加 -->
+<a href="/download_ocr_result">OCR結果をダウンロード</a>
+    
+    <script>
+    
+    // 各'ocr*-button'というIDを持つボタンに対して、クリックイベントのリスナーを追加
+    // ボタンがクリックされると、'uploadAndDownload'関数が実行される。
+    // 'uploadAndDownload：OCRを実行して結果をサーバーにアップロードし、OCRの結果をエクセルファイルといてダウンロードするための処理を行う関数'
+
+     document.getElementById('ocr1-button').addEventListener('click', function() {
+        uploadAndDownload('ocr1');
+    });
+    document.getElementById('ocr2-button').addEventListener('click', function() {
+        uploadAndDownload('ocr2');
+    });
+    document.getElementById('ocr3-button').addEventListener('click', function() {
+        uploadAndDownload('ocr3');
+    });
+    document.getElementById('ocr4-button').addEventListener('click', function() {
+        uploadAndDownload('ocr4');
+    });
+
+    //  'uploadAndDownload'関数内で、OCR処理に必要なデータを含むフォームデータ(FormData)を作成
+    function uploadAndDownload(ocrType) {
+        // 'FormData'オブジェクトを作成
+        var formData = new FormData();
+        // フォームデータに、ファイルをアップロードするためのキー('file')と、アップロードするファイルのデータ（'file'変数に保存されているファイルデータ）を追加
+        formData.append('file', file);
+        
+        // 'fetch'関数を使用して、サーバーにHTTPリクエスト('POST')を送信
+        fetch('/' + ocrType, {
+            method:'POST',
+            // フォームデータ('FormData'オブジェクト)をリクエストのボディに含める
+            body:formData
+        })
+        // fetch関数の結果として得られたレスポンスオブジェクトの内容を、.blob()メソッドを使ってバイナリデータ（Blobオブジェクト）として取得
+        // このBlobオブジェクトには、サーバーから送られてきたエクセルファイルのバイナリデータが含まれる
+        .then(response => response.blob())
+        // 取得したBlobオブジェクトを引数として、次の'.then'のコールバック関数を実行
+        .then(blob =>{
+            // Blobオブジェクトから、ダウンロード用のURL(Objrct URL：実際のエクセルファイルのデータを含む)を生成
+            var url = window.URL.createObjectURL(blob);
+            // ダウンロード用のリンクを生成するために、新しい'<a>：ハイパーリンク'要素を作成
+            var a = document.createElement('a');
+            // リンクの’href属性：<a>要素に設定される属性’に、ダウンロード用に生成したObject URLを設定
+            a.href = url;
+            // リンクの'download属性：<a>要素に設定される属性’に、ダウンロード時の'ocrType'に応じてファイル名を設定
+            a.download = ocrType + '-result.txt';
+            // '<a>'要素をHTML文書の'<body>'要素の子要素として追加
+            document.body.appendChild(a);
+            // ダウンロード用のリンクを自動的にクリック（これによりブラウザがエクセルファイルをダウンロードする）
+            a.click();
+            // ダウンロードが完了した後、生成した<a>要素を削除（これにより、不要な要素がDOMに残らないようにしする）
+            a.remove();
+        });
+    }
+    </script>
+
+</body>
+</html>
